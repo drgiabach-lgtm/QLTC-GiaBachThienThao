@@ -1,5 +1,5 @@
 Github Index
-9 minutes ago
+1 minute ago
 
 Review
 <!DOCTYPE html>
@@ -7,15 +7,17 @@ Review
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>An Yên - Quản Lý Tài Chính</title>
+    <title>An Yên - Tài Chính Gia Đình</title>
     <!-- Meta Tags -->
-    <meta property="og:title" content="An Yên - Quản Lý Tài Chính Cá Nhân">
-    <meta property="og:description" content="Hệ thống quản lý chi tiêu và ngân sách cá nhân.">
+    <meta property="og:title" content="An Yên - Tài Chính Gia Đình (Couple Finance)">
+    <meta property="og:description" content="Hệ thống quản lý chi tiêu và ngân sách chung cho vợ chồng.">
     <link rel="icon" type="image/x-icon"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/svgs/solid/leaf.svg">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://script.google.com">
+    <link rel="preconnect" href="https://lh3.googleusercontent.com">
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -131,6 +133,11 @@ Review
         <div class="leaf-loader"><i class="fa-solid fa-leaf"></i></div>
         <h1 class="loading-text">An Yên</h1>
         <p class="loading-sub">ĐANG TẢI DỮ LIỆU...</p>
+        <!-- Retry Button (Hidden initially) -->
+        <button id="retryBtn" onclick="location.reload()"
+            style="display:none; margin-top: 20px; padding: 10px 20px; border: 1px solid #10b981; color: #10b981; background: transparent; border-radius: 20px; cursor: pointer; font-family: 'Quicksand'; font-weight: bold; animation: fadeInText 0.5s;">
+            <i class="fa-solid fa-rotate-right"></i> Tải lại trang
+        </button>
     </div>
     <!-- MAIN APP IFRAME -->
     <!-- QUAN TRỌNG: Thay thế LINK_APP_SCRIPT_CUA_BAN bằng link Deploy của bạn -->
@@ -139,7 +146,7 @@ Review
         allow="autoplay; fullscreen" onload="onIframeLoad()">
     </iframe>
     <script>
-        // 1. CHUYỂN TIẾP THAM SỐ (Cho phép bookmark link sâu nếu cần)
+        // 1. CHUYỂN TIẾP THAM SỐ (Hỗ trợ ?user=husband, ?user=wife, ?user=joint)
         (function () {
             var params = window.location.search;
             if (params) {
@@ -151,24 +158,38 @@ Review
                 iframe.src = src + separator + params.substring(1);
             }
         })();
-        // 2. XỬ LÝ HIỆU ỨNG LOAD XONG
+        // 2. XỬ LÝ HIỆU ỨNG LOAD XONG (Ưu tiên PostMessage)
+        // Lắng nghe tín hiệu từ App bên trong
+        window.addEventListener('message', function (e) {
+            if (e.data === 'APP_READY') {
+                hideLoader();
+            }
+        });
+        // Backup: Iframe load + Timeout (đề phòng postMessage không tới)
         function onIframeLoad() {
-            // Đợi thêm 1 giây để app bên trong render xong UI ban đầu
-            setTimeout(function () {
-                var loader = document.getElementById('loader');
-                var iframe = document.getElementById('appFrame');
-                if (loader) loader.classList.add('hidden');
-                if (iframe) iframe.classList.add('loaded');
-            }, 1000);
+            // Không ẩn ngay, đợi 2s để chắc chắn render ổn nếu chưa nhận đc msg
+            setTimeout(hideLoader, 2500);
         }
-        // Fallback: Tự động tắt loading sau 10s nếu mạng quá chậm hoặc lỗi load
-        setTimeout(function () {
+        function hideLoader() {
             var loader = document.getElementById('loader');
+            var iframe = document.getElementById('appFrame');
             if (loader && !loader.classList.contains('hidden')) {
                 loader.classList.add('hidden');
-                document.getElementById('appFrame').classList.add('loaded');
             }
-        }, 10000);
+            if (iframe) iframe.classList.add('loaded');
+        }
+        // Timeout: Nếu 12s chưa xong, hiện nút Reload
+        setTimeout(function () {
+            var loader = document.getElementById('loader');
+            var retryBtn = document.getElementById('retryBtn');
+            if (loader && !loader.classList.contains('hidden')) {
+                // Vẫn đang load, có thể bị kẹt -> Hiện nút reload
+                if (retryBtn) retryBtn.style.display = 'block';
+                // Đổi text
+                var subText = document.querySelector('.loading-sub');
+                if (subText) subText.innerText = 'KẾT NỐI HƠI CHẬM...';
+            }
+        }, 12000);
     </script>
 </body>
 </html>
